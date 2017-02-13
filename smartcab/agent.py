@@ -52,12 +52,14 @@ class LearningAgent(Agent):
         inputs = self.env.sense(self)           # Visual input - intersection light and traffic
         deadline = self.env.get_deadline(self)  # Remaining deadline
 
+
+
         ########### 
         ## TO DO ##
         ###########
         # Set 'state' as a tuple of relevant data for the agent        
-        state = None
-
+        state = (waypoint,inputs['light'], inputs['left'], inputs['right'], inputs['oncoming'])
+        print state
         return state
 
 
@@ -168,7 +170,7 @@ def run():
     #   display      - set to False to disable the GUI if PyGame is enabled
     #   log_metrics  - set to True to log trial and simulation results to /logs
     #   optimized    - set to True to change the default log file name
-    sim = Simulator(env, update_delay=0.01, log_metrics=True)
+    sim = Simulator(env, update_delay=10, log_metrics=True)
     
     ##############
     # Run the simulator
