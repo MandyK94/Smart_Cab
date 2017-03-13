@@ -8,7 +8,7 @@ class LearningAgent(Agent):
     """ An agent that learns to drive in the Smartcab world.
         This is the object you will be modifying. """ 
 
-    def __init__(self, env, learning=False, epsilon=0.9, alpha=0.5):
+    def __init__(self, env, learning=False, epsilon=1, alpha=0.5):
         super(LearningAgent, self).__init__(env)     # Set the agent in the evironment 
         self.planner = RoutePlanner(self.env, self)  # Create a route planner
         self.valid_actions = self.env.valid_actions  # The set of valid actions
@@ -44,7 +44,8 @@ class LearningAgent(Agent):
             self.epsilon = 0.0
             self.alpha = 0.0
         else:
-            self.epsilon -= 0.05
+            import numpy as np
+            self.epsilon = np.exp(-self.alpha * self.trials)
         self.trials+=1
         return None
 
@@ -76,8 +77,16 @@ class LearningAgent(Agent):
         ## TO DO ##
         ###########
         # Calcuate the maximum Q-value of all actions for a given state
-        import operator
-        maxQ = max(self.Q[state].iteritems(), key=operator.itemgetter(1))[0]
+        #import operator
+        #maxQ = max(self.Q[state].iteritems(), key=operator.itemgetter(1))[0]
+
+        maxQ = -float('inf')
+
+        for act in self.Q[state]:
+            if self.Q[state][act]>maxQ:
+                maxQ = self.Q[state][act]
+
+
         return maxQ 
 
 
@@ -119,7 +128,13 @@ class LearningAgent(Agent):
             if rand <=self.epsilon:
                 action = random.choice(self.valid_actions)
             else :
-                action = self.get_maxQ(state)
+                max_action = self.get_maxQ(state)
+
+                for act in self.Q[state]:
+                    if self.Q[state][act]==max_action:
+                        return act
+
+
         return action
 
 
@@ -134,8 +149,7 @@ class LearningAgent(Agent):
         # When learning, implement the value iteration update rule
         #   Use only the learning rate 'alpha' (do not use the discount factor 'gamma')
         if self.learning == True:
-            now = self.alpha * reward
-            self.Q[state][action] += (1-self.alpha) * self.Q[state][action] + now
+            self.Q[state][action] =(1-self.alpha)*self.Q[state][action] +(reward*self.alpha)
         return
 
 
@@ -186,7 +200,7 @@ def run():
     #   display      - set to False to disable the GUI if PyGame is enabled
     #   log_metrics  - set to True to log trial and simulation results to /logs
     #   optimized    - set to True to change the default log file name
-    sim = Simulator(env, update_delay=0.01, log_metrics=True)
+    sim = Simulator(env, update_delay=0.01, log_metrics=True, optimized=True)
     
     ##############
     # Run the simulator
