@@ -30,10 +30,11 @@ class LearningAgent(Agent):
         """ The reset function is called at the beginning of each trial.
             'testing' is set to True if testing trials are being used
             once training trials have completed. """
-
+        import numpy as np
         # Select the destination as the new location to route to
         self.planner.route_to(destination)
-        
+        self.alpha = self.alpha - 0.00007
+        self.epsilon = np.exp(-0.001 * (float(0.5-self.alpha)/0.00007))
         ########### 
         ## TO DO ##
         ###########
@@ -43,9 +44,7 @@ class LearningAgent(Agent):
         if testing ==True :
             self.epsilon = 0.0
             self.alpha = 0.0
-        else:
-            import numpy as np
-            self.epsilon = np.exp(-self.alpha * self.trials)
+        
         self.trials+=1
         return None
 
@@ -113,8 +112,10 @@ class LearningAgent(Agent):
         self.state = state
         self.next_waypoint = self.planner.next_waypoint()
         
+        action = []
+
         if self.learning == False:
-            action = random.choice(self.valid_actions)
+            action.append(random.choice(self.valid_actions))
 
         ########### 
         ## TO DO ##
@@ -126,16 +127,14 @@ class LearningAgent(Agent):
         if self.learning == True:
             rand = random.random()
             if rand <=self.epsilon:
-                action = random.choice(self.valid_actions)
+                action.append(random.choice(self.valid_actions))
             else :
                 max_action = self.get_maxQ(state)
 
                 for act in self.Q[state]:
                     if self.Q[state][act]==max_action:
-                        return act
-
-
-        return action
+                        action.append(act)
+        return random.choice(action)
 
 
     def learn(self, state, action, reward):
@@ -149,7 +148,9 @@ class LearningAgent(Agent):
         # When learning, implement the value iteration update rule
         #   Use only the learning rate 'alpha' (do not use the discount factor 'gamma')
         if self.learning == True:
-            self.Q[state][action] =(1-self.alpha)*self.Q[state][action] +(reward*self.alpha)
+            #self.Q[state][action] =(1-self.alpha)*self.Q[state][action] +(reward*self.alpha)
+            #self.Q[state][action] = reward + self.Q[state][action] * self.alpha
+            self.Q[state][action] = (1 - self.alpha) * self.Q[state][action] + self.alpha * reward
         return
 
 
@@ -177,7 +178,7 @@ def run():
     #   verbose     - set to True to display additional output from the simulation
     #   num_dummies - discrete number of dummy agents in the environment, default is 100
     #   grid_size   - discrete number of intersections (columns, rows), default is (8, 6)
-    env = Environment(verbose=True, grid_size=(8,5))
+    env = Environment()
     
     ##############
     # Create the driving agent
@@ -200,14 +201,14 @@ def run():
     #   display      - set to False to disable the GUI if PyGame is enabled
     #   log_metrics  - set to True to log trial and simulation results to /logs
     #   optimized    - set to True to change the default log file name
-    sim = Simulator(env, update_delay=0.01, log_metrics=True, optimized=True)
+    sim = Simulator(env, update_delay=0.01, log_metrics=True, optimized=True, display=True)
     
     ##############
     # Run the simulator
     # Flags:
     #   tolerance  - epsilon tolerance before beginning testing, default is 0.05 
     #   n_test     - discrete number of testing trials to perform, default is 0
-    sim.run(n_test=10)
+    sim.run(n_test=10, tolerance=0.005)
 
 
 if __name__ == '__main__':
