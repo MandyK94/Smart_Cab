@@ -23,7 +23,7 @@ class LearningAgent(Agent):
         ## TO DO ##
         ###########
         # Set any additional class parameters as needed
-        self.trials = 1
+        self.count = 1
 
 
     def reset(self, destination=None, testing=False):
@@ -33,8 +33,6 @@ class LearningAgent(Agent):
         import numpy as np
         # Select the destination as the new location to route to
         self.planner.route_to(destination)
-        self.alpha = self.alpha - 0.00007
-        self.epsilon = np.exp(-0.001 * (float(0.5-self.alpha)/0.00007))
         ########### 
         ## TO DO ##
         ###########
@@ -44,8 +42,9 @@ class LearningAgent(Agent):
         if testing ==True :
             self.epsilon = 0.0
             self.alpha = 0.0
-        
-        self.trials+=1
+        else:
+        	self.epsilon = math.cos(0.01*self.count)
+	        self.count+=1
         return None
 
     def build_state(self):
@@ -99,7 +98,7 @@ class LearningAgent(Agent):
         # If it is not, create a new dictionary for that state
         #   Then, for each action available, set the initial Q-value to 0.0
 
-        if self.learning == True and state not in self.Q:
+        if state not in self.Q:
             self.Q[state] = {None : 0.0, 'left' : 0.0, 'right' : 0.0, 'forward' : 0.0}
         return
 
@@ -114,8 +113,7 @@ class LearningAgent(Agent):
         
         action = []
 
-        if self.learning == False:
-            action.append(random.choice(self.valid_actions))
+        
 
         ########### 
         ## TO DO ##
@@ -124,7 +122,9 @@ class LearningAgent(Agent):
         # When learning, choose a random action with 'epsilon' probability
         #   Otherwise, choose an action with the highest Q-value for the current state
 
-        if self.learning == True:
+        if self.learning == False:
+            action.append(random.choice(self.valid_actions))
+        else:
             rand = random.random()
             if rand <=self.epsilon:
                 action.append(random.choice(self.valid_actions))
@@ -148,8 +148,6 @@ class LearningAgent(Agent):
         # When learning, implement the value iteration update rule
         #   Use only the learning rate 'alpha' (do not use the discount factor 'gamma')
         if self.learning == True:
-            #self.Q[state][action] =(1-self.alpha)*self.Q[state][action] +(reward*self.alpha)
-            #self.Q[state][action] = reward + self.Q[state][action] * self.alpha
             self.Q[state][action] = (1 - self.alpha) * self.Q[state][action] + self.alpha * reward
         return
 
@@ -164,7 +162,7 @@ class LearningAgent(Agent):
         action = self.choose_action(state)  # Choose an action
         reward = self.env.act(self, action) # Receive a reward
         self.learn(state, action, reward)   # Q-learn
-
+        print(self.Q)
         return
         
 
